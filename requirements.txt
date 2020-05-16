@@ -1,0 +1,5 @@
+docopt
+pylint
+
+requests~=2.18
+influxdb
