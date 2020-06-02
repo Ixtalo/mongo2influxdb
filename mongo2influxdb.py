@@ -17,6 +17,7 @@ Options:
   --host=HOST       InfluxDB host [default: localhost]
   --port=PORT       InfluxDB port [default: 8086]
   --sleep=N         Sleep seconds between sending batches [default: 0]
+  --batch=N         Batch size [default: 100000]
   -v --verbose      More output
   -h --help         Show this screen
   --version         Show version
@@ -32,9 +33,9 @@ __author__ = "Alexander Streicher"
 __email__ = "ixtalo@gmail.com"
 __copyright__ = "Copyright (C) 2018 Alexander Streicher"
 __license__ = "GPL"
-__version__ = "1.0.1"
+__version__ = "1.0.2"
 __date__ = "2020-05-03"
-__updated__ = '2020-05-04'
+__updated__ = '2020-06-02'
 __status__ = "Production"
 
 DB_NAME = 'mqtt'  # database name
@@ -59,7 +60,10 @@ def main():
     input_file = arguments['<mqtt-messages-mongodbexport.json>']
     influxdb_host = arguments['--host']
     influxdb_port = int(arguments['--port'])
-    sleep_time = int(arguments['--sleep'])
+    sleep_time = abs(int(arguments['--sleep']))
+    batch_size = abs(int(arguments['--batch']))
+
+    assert batch_size > 0, "batch size must be >0 !"
 
     ## setup logging
     logging.basicConfig(level=logging.INFO if not verbose else logging.DEBUG)
@@ -111,7 +115,7 @@ def main():
             points.append(point)
 
             ## write as batch
-            if i > 0 and i % 100000 == 0:
+            if i > 0 and i % batch_size == 0:
                 logging.info("%d writing to DB...", i)
                 influx_client.write_points(points, time_precision='u', database=DB_NAME)
                 points = []
