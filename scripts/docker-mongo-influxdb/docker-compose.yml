@@ -1,0 +1,56 @@
+## https://docs.docker.com/compose/
+## https://docs.docker.com/compose/compose-file/
+version: "3.3"
+
+
+services:
+
+  mongo:
+    ## https://hub.docker.com/_/influxdb
+    image: mongo
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: root
+    ports:
+      - 27017:27017
+
+  mongo-express:
+    ## https://hub.docker.com/_/mongo-express
+    image: mongo-express
+    ports:
+      - 8081:8081
+    environment:
+      ME_CONFIG_MONGODB_ADMINUSERNAME: root
+      ME_CONFIG_MONGODB_ADMINPASSWORD: root
+
+
+  influxdb:
+    ## https://hub.docker.com/_/influxdb
+    image: influxdb:alpine
+    container_name: influxdb
+    ports:
+      - "8083:8083"
+      - "8086:8086"
+      - "8090:8090"
+    #volumes:
+    #- /srv/docker/influxdb/data:/var/lib/influxdb
+    environment:
+      - INFLUXDB_REPORTING_DISABLED=true
+      - INFLUXDB_DATA_QUERY_LOG_ENABLED=false
+      - INFLUXDB_DB=mqtt
+      - INFLUXDB_HTTP_AUTH_ENABLED=false
+      - INFLUXDB_ADMIN_USER=root
+      - INFLUXDB_ADMIN_PASSWORD=root
+      - INFLUXDB_LOGGING_LEVEL=debug
+
+  chronograf:
+    image: chronograf:alpine
+    ports:
+      - "8888:8888"
+    depends_on:
+      - influxdb
+    environment:
+      - INFLUXDB_URL=http://influxdb:8086
+      - INFLUXDB_USERNAME=root
+      - INFLUXDB_PASSWORD=root
+
